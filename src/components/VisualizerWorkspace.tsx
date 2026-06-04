@@ -414,11 +414,15 @@ export default function VisualizerWorkspace({
         {/* L4. STACK BOARDS */}
         {(selectedAlgorithm.category === "Stack" || selectedAlgorithm.category === "Queue") && (
           <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8 max-w-xl">
-            {/* Input Character Stream */}
+            {/* Input Character Stream or Dynamic Operations Stream */}
             {state.chars && (
               <div className="flex flex-col items-center">
-                <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">Input Characters</span>
-                <div className="flex items-center gap-1.5 p-3.5 bg-[#F9F8F6] border border-[#EBE9E4] rounded-lg">
+                <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">
+                  {selectedAlgorithm.id === "stack-push-pop" || selectedAlgorithm.id === "queue-basic" || selectedAlgorithm.id === "circular-queue" || selectedAlgorithm.id === "priority-queue"
+                    ? "Operations Stream"
+                    : "Input Characters"}
+                </span>
+                <div className="flex flex-wrap justify-center gap-1.5 p-3.5 bg-[#F9F8F6] border border-[#EBE9E4] rounded-lg max-w-xs sm:max-w-md">
                   {state.chars.map((char: string, idx: number) => {
                     const isActive = idx === state.activeCharIndex;
                     const isProcessed = idx < state.activeCharIndex;
@@ -428,7 +432,10 @@ export default function VisualizerWorkspace({
                     else if (isProcessed) borderC = "border-[#D6D3CD] text-[#D6D3CD] line-through";
 
                     return (
-                      <div key={idx} className={`w-8 h-8 border flex items-center justify-center font-mono text-xs rounded transition-all duration-300 ${borderC}`}>
+                      <div
+                        key={idx}
+                        className={`px-2 min-w-[2rem] h-8 border flex items-center justify-center font-mono text-xs rounded transition-all duration-300 whitespace-nowrap ${borderC}`}
+                      >
                         {char}
                       </div>
                     );
@@ -441,13 +448,13 @@ export default function VisualizerWorkspace({
             {state.stack && (
               <div className="flex flex-col items-center relative">
                 <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">LIFO Stack</span>
-                <div className="w-24 h-48 border-b-4 border-x-4 border-[#706E68] rounded-b-lg flex flex-col-reverse justify-start items-center p-1.5 gap-1.5 bg-[#FDFCFB]">
+                <div className="w-28 min-h-[14rem] max-h-[22rem] overflow-y-auto border-b-4 border-x-4 border-[#706E68] rounded-b-lg flex flex-col-reverse justify-start items-center p-1.5 gap-1.5 bg-[#FDFCFB] pb-4 transition-all duration-300">
                   {state.stack.map((item: string, idx: number) => {
                     const isTop = idx === state.stack.length - 1;
                     return (
                       <div
                         key={idx}
-                        className={`w-full py-2.5 rounded text-center font-mono font-bold text-xs ring-1 shadow-sm transition-all duration-300 ${
+                        className={`w-full py-1.5 rounded text-center font-mono font-bold text-xs ring-1 shadow-sm transition-all duration-300 ${
                           isTop
                             ? "bg-[#FEF3C7] border-2 border-[#F59E0B] text-[#92400E] animate-bounce"
                             : "bg-white border border-[#EBE9E4] text-[#1A1A17]"
@@ -470,13 +477,13 @@ export default function VisualizerWorkspace({
             {state.queue && (
               <div className="flex flex-col items-center relative">
                 <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">FIFO Queue</span>
-                <div className="flex items-center gap-2 p-4 bg-[#F9F8F6] border border-[#EBE9E4] rounded-lg">
+                <div className="flex items-center gap-2 p-4 bg-[#F9F8F6] border border-[#EBE9E4] rounded-lg max-w-[320px] sm:max-w-md">
                   <span className="text-xs text-[#A3A199] font-mono">Front</span>
-                  <div className="flex items-center gap-1 bg-white p-2 border border-[#EBE9E4] rounded">
+                  <div className="flex items-center gap-1 bg-white p-2 border border-[#EBE9E4] rounded max-w-[140px] sm:max-w-[240px] overflow-x-auto whitespace-nowrap">
                     {state.queue.map((item: string, idx: number) => (
                       <div
                         key={idx}
-                        className="px-3 py-1.5 bg-[#DCFCE7] border border-[#10B981] rounded text-[#065F46] font-mono font-bold text-xs"
+                        className="px-3 py-1.5 bg-[#DCFCE7] border border-[#10B981] rounded text-[#065F46] font-mono font-bold text-xs shrink-0"
                       >
                         {item}
                       </div>

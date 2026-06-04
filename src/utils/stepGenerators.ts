@@ -1470,13 +1470,72 @@ export function generateSteps(algorithmId: string, inputString: string): Algorit
 
   // 1.17. STACK OPERATIONS GENERATOR
   else if (algorithmId === "stack-push-pop") {
-    addStep("Initialize empty LIFO stack.", { stack: "[]" }, [1], { stack: [], valid: true });
-    addStep("Push element 'A' onto the stack.", { action: "push", val: "A" }, [2], { stack: ["A"], valid: true });
-    addStep("Push element 'B' onto the stack.", { action: "push", val: "B" }, [3], { stack: ["A", "B"], valid: true });
-    addStep("Push element 'C' onto the stack.", { action: "push", val: "C" }, [4], { stack: ["A", "B", "C"], valid: true });
-    addStep("Pop element from the stack. LIFO retrieves top element 'C'.", { action: "pop", popped: "C" }, [5], { stack: ["A", "B"], valid: true });
-    addStep("Push element 'D' onto the stack.", { action: "push", val: "D" }, [6], { stack: ["A", "B", "D"], valid: true });
-    addStep("Final stack state.", { stack: "['A', 'B', 'D']" }, [7], { stack: ["A", "B", "D"], valid: true });
+    let ops = inputString
+      .split(",")
+      .map((x) => x.trim())
+      .filter((x) => x.length > 0);
+    if (ops.length === 0) {
+      ops = ["push5", "push20", "pop", "push15"];
+    }
+
+    let currentStack: string[] = [];
+    addStep("Initialize empty LIFO stack.", { stack: "[]" }, [1], { stack: [], valid: true, chars: ops, activeCharIndex: -1 });
+
+    for (let i = 0; i < ops.length; i++) {
+      const op = ops[i];
+      // Match push(...) or pushX or just numbers/words
+      const pushMatch = op.match(/^(?:push.*?)\s*\(?([A-Za-z0-9_-]+)\)?/i) || op.match(/^push\s*(.*)$/i);
+      const isPop = op.toLowerCase().startsWith("pop");
+
+      if (pushMatch) {
+        let value = pushMatch[1] ? pushMatch[1].trim() : op.replace(/^push/i, "").trim();
+        if (value) {
+          currentStack.push(value);
+          addStep(
+            `Operation ${i + 1}: Push element '${value}' onto the stack.`,
+            { action: "push", val: value, index: i },
+            [5, 6],
+            { stack: [...currentStack], valid: true, chars: ops, activeCharIndex: i }
+          );
+          continue;
+        }
+      }
+      
+      if (isPop) {
+        if (currentStack.length === 0) {
+          addStep(
+            `Operation ${i + 1}: Pop requested but Stack is empty (Underflow).`,
+            { action: "pop-underflow", index: i },
+            [8, 9],
+            { stack: [], valid: true, chars: ops, activeCharIndex: i }
+          );
+        } else {
+          const popped = currentStack.pop();
+          addStep(
+            `Operation ${i + 1}: Pop element from the stack. LIFO retrieves top element '${popped}'.`,
+            { action: "pop", popped: popped, index: i },
+            [8, 9, 10],
+            { stack: [...currentStack], valid: true, chars: ops, activeCharIndex: i }
+          );
+        }
+      } else {
+        // Fallback: any raw value is treated as a push command
+        currentStack.push(op);
+        addStep(
+          `Operation ${i + 1}: Push element '${op}' onto the stack.`,
+          { action: "push", val: op, index: i },
+          [5, 6],
+          { stack: [...currentStack], valid: true, chars: ops, activeCharIndex: i }
+        );
+      }
+    }
+    
+    addStep(
+      "All stack operations processed successfully.",
+      { stack: `[${currentStack.join(", ")}]` },
+      [12],
+      { stack: [...currentStack], valid: true, chars: ops, activeCharIndex: ops.length }
+    );
   }
 
   // 1.18. NEXT GREATER ELEMENT GENERATOR
@@ -1494,12 +1553,72 @@ export function generateSteps(algorithmId: string, inputString: string): Algorit
 
   // 1.19. QUEUE OPERATIONS GENERATOR
   else if (algorithmId === "queue-basic" || algorithmId === "circular-queue" || algorithmId === "priority-queue") {
-    addStep(`Initialize FIFO queue for ${algorithmId}.`, { queue: "[]" }, [1], { queue: [] });
-    addStep("Enqueue element 'X' to queue rear.", { action: "enqueue", val: "X" }, [2], { queue: ["X"] });
-    addStep("Enqueue element 'Y' to queue rear.", { action: "enqueue", val: "Y" }, [3], { queue: ["X", "Y"] });
-    addStep("Enqueue element 'Z' to queue rear.", { action: "enqueue", val: "Z" }, [4], { queue: ["X", "Y", "Z"] });
-    addStep("Dequeue element. FIFO retrieves front element 'X'.", { action: "dequeue", dequeued: "X" }, [5], { queue: ["Y", "Z"] });
-    addStep("Enqueue element 'W'.", { action: "enqueue", val: "W" }, [6], { queue: ["Y", "Z", "W"] });
+    let ops = inputString
+      .split(",")
+      .map((x) => x.trim())
+      .filter((x) => x.length > 0);
+    if (ops.length === 0) {
+      ops = ["enq12", "enq5", "deq", "enq8"];
+    }
+
+    let currentQueue: string[] = [];
+    addStep(`Initialize FIFO queue for ${algorithmId}.`, { queue: "[]" }, [1], { queue: [], chars: ops, activeCharIndex: -1 });
+
+    for (let i = 0; i < ops.length; i++) {
+      const op = ops[i];
+      // Match enqX, enqueueX, pushX, enq(X), enqueue(X)
+      const enqMatch = op.match(/^(?:enq|enqueue|push|add).*?\s*\(?([A-Za-z0-9_-]+)\)?/i) || op.match(/^(?:enq|enqueue|push|add)\s*(.*)$/i);
+      const isDeq = op.toLowerCase().startsWith("deq") || op.toLowerCase().startsWith("pop") || op.toLowerCase().startsWith("remove") || op.toLowerCase().startsWith("poll") || op.toLowerCase().startsWith("dequeue");
+
+      if (enqMatch) {
+        let value = enqMatch[1] ? enqMatch[1].trim() : op.replace(/^(enq|enqueue|push|add)/i, "").trim();
+        if (value) {
+          currentQueue.push(value);
+          addStep(
+            `Operation ${i + 1}: Enqueue element '${value}' to queue rear.`,
+            { action: "enqueue", val: value, index: i },
+            [2, 3],
+            { queue: [...currentQueue], chars: ops, activeCharIndex: i }
+          );
+          continue;
+        }
+      }
+
+      if (isDeq) {
+        if (currentQueue.length === 0) {
+          addStep(
+            `Operation ${i + 1}: Dequeue requested but Queue is empty (Underflow).`,
+            { action: "dequeue-underflow", index: i },
+            [4],
+            { queue: [], chars: ops, activeCharIndex: i }
+          );
+        } else {
+          const dequeued = currentQueue.shift();
+          addStep(
+            `Operation ${i + 1}: Dequeue element. FIFO retrieves front element '${dequeued}'.`,
+            { action: "dequeue", dequeued: dequeued, index: i },
+            [4, 5],
+            { queue: [...currentQueue], chars: ops, activeCharIndex: i }
+          );
+        }
+      } else {
+        // Fallback: any raw value without command is treated as enqueue
+        currentQueue.push(op);
+        addStep(
+          `Operation ${i + 1}: Enqueue element '${op}' to queue rear.`,
+          { action: "enqueue", val: op, index: i },
+          [2, 3],
+          { queue: [...currentQueue], chars: ops, activeCharIndex: i }
+        );
+      }
+    }
+    
+    addStep(
+      `All queue operations processed. Final queue state computed.`,
+      { queue: `[${currentQueue.join(", ")}]` },
+      [6],
+      { queue: [...currentQueue], chars: ops, activeCharIndex: ops.length }
+    );
   }
 
   // 1.20. HEAP OPERATIONS GENERATOR
