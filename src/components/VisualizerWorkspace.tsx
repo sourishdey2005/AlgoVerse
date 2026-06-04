@@ -179,7 +179,7 @@ export default function VisualizerWorkspace({
       {/* RENDER ACTIVE VISUALIZATION AREA */}
       <div className="flex-1 my-8 min-h-[220px] flex items-center justify-center relative">
         {/* L1. SORTING BOARDS */}
-        {selectedAlgorithm.category === "Sorting" && state.arr && (
+        {(selectedAlgorithm.category === "Sorting" || selectedAlgorithm.id.includes("sort")) && state.arr && (
           <div className="w-full h-full flex items-end justify-center gap-2 md:gap-3.5 max-w-xl px-4">
             {state.arr.map((val: number, idx: number) => {
               const isActive = state.activeIndices?.includes(idx);
@@ -227,7 +227,7 @@ export default function VisualizerWorkspace({
         )}
 
         {/* L2. ARRAYS / BINARY SEARCH / KADANE BOARDS */}
-        {(selectedAlgorithm.category === "Array" || selectedAlgorithm.id === "sliding-window-max") && state.arr && (
+        {(selectedAlgorithm.category === "Array" || selectedAlgorithm.category === "Arrays" || selectedAlgorithm.category === "Searching" || selectedAlgorithm.id === "sliding-window-max") && state.arr && !selectedAlgorithm.id.includes("sort") && (
           <div className="flex flex-col items-center justify-center gap-8 w-full max-w-2xl">
             <div className="flex flex-wrap justify-center gap-1.5 md:gap-2.5">
               {state.arr.map((val: number, idx: number) => {
@@ -335,7 +335,7 @@ export default function VisualizerWorkspace({
         )}
 
         {/* L3. LINKED LIST BOARD */}
-        {selectedAlgorithm.category === "Linked List" && state.nodes && (
+        {(selectedAlgorithm.category === "Linked List" || selectedAlgorithm.id.includes("linkedlist") || selectedAlgorithm.id === "cycle-detection") && state.nodes && (
           <div className="w-full flex flex-col items-center justify-center gap-10 max-w-2xl px-4 overflow-x-auto py-6">
             <div className="flex items-center gap-10">
               {state.nodes.map((node: any, idx: number) => {
@@ -412,60 +412,88 @@ export default function VisualizerWorkspace({
         )}
 
         {/* L4. STACK BOARDS */}
-        {selectedAlgorithm.category === "Stack" && state.chars && (
+        {(selectedAlgorithm.category === "Stack" || selectedAlgorithm.category === "Queue") && (
           <div className="w-full flex flex-col md:flex-row items-center justify-around gap-8 max-w-xl">
             {/* Input Character Stream */}
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">Input Characters</span>
-              <div className="flex items-center gap-1.5 p-3.5 bg-[#F9F8F6] border border-[#EBE9E4] rounded-lg">
-                {state.chars.map((char: string, idx: number) => {
-                  const isActive = idx === state.activeCharIndex;
-                  const isProcessed = idx < state.activeCharIndex;
+            {state.chars && (
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">Input Characters</span>
+                <div className="flex items-center gap-1.5 p-3.5 bg-[#F9F8F6] border border-[#EBE9E4] rounded-lg">
+                  {state.chars.map((char: string, idx: number) => {
+                    const isActive = idx === state.activeCharIndex;
+                    const isProcessed = idx < state.activeCharIndex;
 
-                  let borderC = "border-[#EBE9E4] text-[#706E68]";
-                  if (isActive) borderC = "border-[#10B981] bg-[#DCFCE7] text-[#065F46] font-bold ring-2 ring-[#10B981]/50 scale-105";
-                  else if (isProcessed) borderC = "border-[#D6D3CD] text-[#D6D3CD] line-through";
+                    let borderC = "border-[#EBE9E4] text-[#706E68]";
+                    if (isActive) borderC = "border-[#10B981] bg-[#DCFCE7] text-[#065F46] font-bold ring-2 ring-[#10B981]/50 scale-105";
+                    else if (isProcessed) borderC = "border-[#D6D3CD] text-[#D6D3CD] line-through";
 
-                  return (
-                    <div key={idx} className={`w-8 h-8 border flex items-center justify-center font-mono text-xs rounded transition-all duration-300 ${borderC}`}>
-                      {char}
-                    </div>
-                  );
-                })}
+                    return (
+                      <div key={idx} className={`w-8 h-8 border flex items-center justify-center font-mono text-xs rounded transition-all duration-300 ${borderC}`}>
+                        {char}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Vertical Stack graphics Tube */}
-            <div className="flex flex-col items-center relative">
-              <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">LIFO Stack</span>
-              <div className="w-24 h-48 border-b-4 border-x-4 border-[#706E68] rounded-b-lg flex flex-col-reverse justify-start items-center p-1.5 gap-1.5 bg-[#FDFCFB]">
-                {state.stack.map((item: string, idx: number) => {
-                  const isTop = idx === state.stack.length - 1;
-                  return (
-                    <div
-                      key={idx}
-                      className={`w-full py-2.5 rounded text-center font-mono font-bold text-xs ring-1 shadow-sm transition-all duration-300 ${
-                        isTop
-                          ? "bg-[#FEF3C7] border-2 border-[#F59E0B] text-[#92400E] animate-bounce"
-                          : "bg-white border border-[#EBE9E4] text-[#1A1A17]"
-                      }`}
-                    >
-                      {item}
+            {state.stack && (
+              <div className="flex flex-col items-center relative">
+                <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">LIFO Stack</span>
+                <div className="w-24 h-48 border-b-4 border-x-4 border-[#706E68] rounded-b-lg flex flex-col-reverse justify-start items-center p-1.5 gap-1.5 bg-[#FDFCFB]">
+                  {state.stack.map((item: string, idx: number) => {
+                    const isTop = idx === state.stack.length - 1;
+                    return (
+                      <div
+                        key={idx}
+                        className={`w-full py-2.5 rounded text-center font-mono font-bold text-xs ring-1 shadow-sm transition-all duration-300 ${
+                          isTop
+                            ? "bg-[#FEF3C7] border-2 border-[#F59E0B] text-[#92400E] animate-bounce"
+                            : "bg-white border border-[#EBE9E4] text-[#1A1A17]"
+                        }`}
+                      >
+                        {item}
+                      </div>
+                    );
+                  })}
+                  {state.stack.length === 0 && (
+                    <div className="text-[10px] text-[#A3A199] text-center my-auto px-2 select-none italic">
+                      Stack is empty
                     </div>
-                  );
-                })}
-                {state.stack.length === 0 && (
-                  <div className="text-[10px] text-[#A3A199] text-center my-auto px-2 select-none italic">
-                    Stack is empty
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Horizontal Queue stream */}
+            {state.queue && (
+              <div className="flex flex-col items-center relative">
+                <span className="text-[10px] uppercase font-bold text-[#A3A199] mb-2">FIFO Queue</span>
+                <div className="flex items-center gap-2 p-4 bg-[#F9F8F6] border border-[#EBE9E4] rounded-lg">
+                  <span className="text-xs text-[#A3A199] font-mono">Front</span>
+                  <div className="flex items-center gap-1 bg-white p-2 border border-[#EBE9E4] rounded">
+                    {state.queue.map((item: string, idx: number) => (
+                      <div
+                        key={idx}
+                        className="px-3 py-1.5 bg-[#DCFCE7] border border-[#10B981] rounded text-[#065F46] font-mono font-bold text-xs"
+                      >
+                        {item}
+                      </div>
+                    ))}
+                    {state.queue.length === 0 && (
+                      <div className="text-xs text-[#A3A199] italic">Empty Queue</div>
+                    )}
+                  </div>
+                  <span className="text-xs text-[#A3A199] font-mono">Rear</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* L5. BST INTERACTIVE TREE BOARDS */}
-        {selectedAlgorithm.category === "Tree" && state.root && (
+        {(selectedAlgorithm.category === "Tree" || selectedAlgorithm.category === "Trees" || selectedAlgorithm.category === "Heap") && state.root && (
           <div className="w-full h-full min-h-[250px] relative px-4 flex justify-center">
             <svg className="w-full max-w-lg min-h-[250px]" viewBox="0 0 100 65">
               {/* Recursive Tree renderer function */}
@@ -566,7 +594,7 @@ export default function VisualizerWorkspace({
         )}
 
         {/* L6. DIJKSTRA / GRAPH MODULE */}
-        {selectedAlgorithm.category === "Graph" && (
+        {(selectedAlgorithm.category === "Graph" || selectedAlgorithm.category === "Graphs") && (
           <div className="w-full flex flex-col md:flex-row items-center gap-6 max-w-4xl h-full justify-between">
             {/* Graph Drawing Canvas */}
             <div className="flex-1 flex flex-col w-full">
@@ -723,7 +751,7 @@ export default function VisualizerWorkspace({
         )}
 
         {/* L7. DYNAMIC PROGRAMMING CELLULAR MATRIX */}
-        {selectedAlgorithm.id === "knapsack" && state.dp && (
+        {(selectedAlgorithm.category === "Dynamic Programming" || selectedAlgorithm.category === "DP" || selectedAlgorithm.id === "knapsack") && state.dp && (
           <div className="w-full flex flex-col items-center justify-center gap-4 max-w-xl">
             <span className="text-[10px] uppercase font-bold text-[#A3A199] tracking-wider mb-1">
               Capacities columns (w) x Items Rows (i) DP Matrix
@@ -733,7 +761,7 @@ export default function VisualizerWorkspace({
                 <thead>
                   <tr className="bg-[#F9F8F6] border-b border-[#EBE9E4] text-[#706E68] text-[9.5px]">
                     <th className="py-2.5 bg-[#F5F3EF] border-r border-[#EBE9E4] w-20">Items (i)</th>
-                    {Array.from({ length: state.capacity + 1 }, (_, w) => (
+                    {Array.from({ length: (state.capacity !== undefined ? state.capacity : 6) }, (_, w) => (
                       <th key={w} className="py-2 border-r border-[#EBE9E4]">W={w}</th>
                     ))}
                   </tr>
@@ -744,8 +772,8 @@ export default function VisualizerWorkspace({
                     return (
                       <tr key={iIdx} className={`border-b border-[#EBE9E4] ${isRowHighlight ? "bg-amber-50/20" : ""}`}>
                         {/* Row headers */}
-                        <td className="py-2.5 bg-[#F9F8F6] font-bold border-r border-[#EBE9E4] text-[#706E68] text-[9.5px]">
-                          {iIdx === 0 ? "0 (Base)" : `I-${iIdx} (v:${state.values[iIdx - 1]}w:${state.weights[iIdx - 1]})`}
+                        <td className="py-2.5 bg-[#F9F8F6] font-bold border-r border-[#EBE9E4] text-[#706E68] text-[10px]">
+                          {iIdx === 0 ? "0 (Base)" : `I-${iIdx} ${state.values ? `(v:${state.values?.[iIdx - 1]} w:${state.weights?.[iIdx - 1]})` : ""}`}
                         </td>
 
                         {rowArr.map((cellVal: number, wIdx: number) => {

@@ -139,6 +139,127 @@ export function generateSteps(algorithmId: string, inputString: string): Algorit
     );
   }
 
+  // 1.5. MERGE SORT GENERATOR
+  else if (algorithmId === "merge-sort") {
+    let arr = inputString
+      .split(",")
+      .map((x) => parseInt(x.trim(), 10))
+      .filter((x) => !isNaN(x));
+    if (arr.length === 0) arr = [30, 10, 45, 15, 5, 25, 40];
+
+    let tempArr = [...arr];
+    const n = tempArr.length;
+
+    addStep(
+      "Initialize Merge Sort. Starting with division split on input elements.",
+      { l: 0, r: n - 1 },
+      [106],
+      { arr: [...tempArr], activeIndices: [], swapIndices: [], sortedIndices: [] }
+    );
+
+    function runMergeSort(l: number, r: number) {
+      if (l < r) {
+        const m = Math.floor((l + r) / 2);
+        
+        addStep(
+          `Divide: Split active subarray [${l} ... ${r}] into left [${l} ... ${m}] and right [${m + 1} ... ${r}].`,
+          { l, r, m },
+          [107, 108, 109, 110],
+          { arr: [...tempArr], activeIndices: Array.from({ length: r - l + 1 }, (_, i) => l + i), swapIndices: [], sortedIndices: [] }
+        );
+
+        runMergeSort(l, m);
+        runMergeSort(m + 1, r);
+        performMerge(l, m, r);
+      }
+    }
+
+    function performMerge(l: number, m: number, r: number) {
+      const n1 = m - l + 1;
+      const n2 = r - m;
+      const L = tempArr.slice(l, m + 1);
+      const R = tempArr.slice(m + 1, r + 1);
+
+      addStep(
+        `Merge: Prepare merging left sorted subarray [${L.join(", ")}] with right sorted subarray [${R.join(", ")}].`,
+        { l, m, r, leftSubarray: JSON.stringify(L), rightSubarray: JSON.stringify(R) },
+        [88, 89, 90, 91, 92],
+        { arr: [...tempArr], activeIndices: Array.from({ length: r - l + 1 }, (_, i) => l + i), swapIndices: [], sortedIndices: [] }
+      );
+
+      let i = 0, j = 0, k = l;
+      while (i < n1 && j < n2) {
+        addStep(
+          `Compare elements L[${i}] (${L[i]}) and R[${j}] (${R[j]}) for merging at index ${k}.`,
+          { i, j, k, leftElement: L[i], rightElement: R[j] },
+          [94, 95],
+          { arr: [...tempArr], activeIndices: [l + i, m + 1 + j], swapIndices: [], sortedIndices: [] }
+        );
+
+        if (L[i] <= R[j]) {
+          tempArr[k] = L[i];
+          addStep(
+            `Since L[${i}] (${L[i]}) <= R[${j}] (${R[j]}), place ${L[i]} at index ${k}.`,
+            { i, j, k, elementPlaced: L[i] },
+            [96],
+            { arr: [...tempArr], activeIndices: [k], swapIndices: [k], sortedIndices: [] }
+          );
+          i++;
+        } else {
+          tempArr[k] = R[j];
+          addStep(
+            `Since L[${i}] (${L[i]}) > R[${j}] (${R[j]}), place ${R[j]} at index ${k}.`,
+            { i, j, k, elementPlaced: R[j] },
+            [98],
+            { arr: [...tempArr], activeIndices: [k], swapIndices: [k], sortedIndices: [] }
+          );
+          j++;
+        }
+        k++;
+      }
+
+      while (i < n1) {
+        tempArr[k] = L[i];
+        addStep(
+          `Copy remaining elements from left subarray. Place L[${i}] (${L[i]}) at index ${k}.`,
+          { i, k, elementPlaced: L[i] },
+          [102],
+          { arr: [...tempArr], activeIndices: [k], swapIndices: [k], sortedIndices: [] }
+        );
+        i++;
+        k++;
+      }
+
+      while (j < n2) {
+        tempArr[k] = R[j];
+        addStep(
+          `Copy remaining elements from right subarray. Place R[${j}] (${R[j]}) at index ${k}.`,
+          { j, k, elementPlaced: R[j] },
+          [103],
+          { arr: [...tempArr], activeIndices: [k], swapIndices: [k], sortedIndices: [] }
+        );
+        j++;
+        k++;
+      }
+
+      addStep(
+        `Merged block [${l} ... ${r}] resolved to: [${tempArr.slice(l, r + 1).join(", ")}].`,
+        { l, r, stateRange: JSON.stringify(tempArr.slice(l, r + 1)) },
+        [111],
+        { arr: [...tempArr], activeIndices: [], swapIndices: [], sortedIndices: l === 0 && r === n - 1 ? Array.from({ length: n }, (_, x) => x) : Array.from({ length: r - l + 1 }, (_, x) => l + x) }
+      );
+    }
+
+    runMergeSort(0, n - 1);
+
+    addStep(
+      "Merge Sort complete! Array fully sorted in O(n log n).",
+      { l: 0, r: n - 1 },
+      [113],
+      { arr: [...tempArr], activeIndices: [], swapIndices: [], sortedIndices: Array.from({ length: n }, (_, k) => k) }
+    );
+  }
+
   // 2. QUICK SORT GENERATOR (Hoare Partition Simulation)
   else if (algorithmId === "quick-sort") {
     let arr = inputString

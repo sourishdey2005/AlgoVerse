@@ -26,6 +26,86 @@ export default function CodePanel({
   let displayCode = defaultCode;
   if (templates && templates[selectedLang]) {
     displayCode = templates[selectedLang];
+  } else if (selectedLang !== "javascript") {
+    // Elegant inline dynamic conversion fallback
+    let translated = defaultCode;
+    if (selectedLang === "python") {
+      translated = defaultCode
+        .replace(/\s*\{\s*$/gm, ":")
+        .replace(/^\s*\}\s*$/gm, "")
+        .replace(/\bfunction\s+(\w+)/g, "def $1")
+        .replace(/\b(let|const|var)\s+/g, "")
+        .replace(/for\s*\(let\s+(\w+)\s*=\s*0;\s*\1\s*<\s*([^;]+)\.length;\s*\1\+\+\)/g, "for $1 in range(len($2))")
+        .replace(/for\s*\(let\s+(\w+)\s*=\s*0;\s*\1\s*<\s*([^;]+);\s*\1\+\+\)/g, "for $1 in range($2)")
+        .replace(/for\s*\(let\s+(\w+)\s*=\s*1;\s*\1\s*<\s*([^;]+);\s*\1\+\+\)/g, "for $1 in range(1, $2)")
+        .replace(/for\s*\(let\s+(\w+)\s*=\s*(.*?);\s*\1\s*<\s*([^;]+);\s*\1\+\+\)/g, "for $1 in range($2, $3)")
+        .replace(/while\s*\((.*?)\)/g, "while $1")
+        .replace(/if\s*\((.*?)\)/g, "if $1")
+        .replace(/else\s+if\s*\((.*?)\)/g, "elif $1")
+        .replace(/else\s*\{/g, "else:")
+        .replace(/===/g, "==")
+        .replace(/!==/g, "!=")
+        .replace(/\btrue\b/g, "True")
+        .replace(/\bfalse\b/g, "False")
+        .replace(/\bnull\b/g, "None")
+        .replace(/Math\.max/g, "max")
+        .replace(/Math\.min/g, "min")
+        .replace(/Math\.floor/g, "int")
+        .replace(/console\.log/g, "print")
+        .replace(/;\s*$/gm, "");
+      
+      // Remove raw closing brackets
+      translated = translated.split("\n")
+        .map(line => line.trim() === "}" ? "" : line)
+        .filter(line => line !== "")
+        .join("\n");
+    } else if (selectedLang === "cpp") {
+      translated = defaultCode
+        .replace(/\bfunction\s+(\w+)/g, "void $1")
+        .replace(/\bclass\s+(\w+)/g, "struct $1")
+        .replace(/\blet\s+(\w+)\s*=\s*\[\]/g, "std::vector<int> $1")
+        .replace(/\blet\s+(\w+)\s*=\s*\{\}/g, "std::unordered_map<int, int> $1")
+        .replace(/\blet\s+/g, "int ")
+        .replace(/\bconst\s+/g, "const int ")
+        .replace(/\bnull\b/g, "nullptr")
+        .replace(/===/g, "==")
+        .replace(/!==/g, "!=")
+        .replace(/Math\.floor/g, "(int)")
+        .replace(/console\.log/g, "std::cout << ");
+    } else if (selectedLang === "c") {
+      translated = defaultCode
+        .replace(/\bfunction\s+(\w+)/g, "void $1")
+        .replace(/\blet\s+(\w+)\s*=\s*\[\]/g, "int $1[100]")
+        .replace(/\blet\s+/g, "int ")
+        .replace(/\bconst\s+/g, "const int ")
+        .replace(/\bnull\b/g, "NULL")
+        .replace(/===/g, "==")
+        .replace(/!==/g, "!=")
+        .replace(/Math\.floor/g, "(int)")
+        .replace(/console\.log/g, "printf");
+    } else if (selectedLang === "java") {
+      translated = defaultCode
+        .replace(/\bfunction\s+(\w+)/g, "public void $1")
+        .replace(/\blet\s+(\w+)\s*=\s*\[\]/g, "int[] $1")
+        .replace(/\blet\s+/g, "int ")
+        .replace(/\bconst\s+/g, "final int ")
+        .replace(/===/g, "==")
+        .replace(/!==/g, "!=")
+        .replace(/Math\.floor/g, "(int)")
+        .replace(/console\.log/g, "System.out.println");
+    } else if (selectedLang === "go") {
+      translated = defaultCode
+        .replace(/\bfunction\s+(\w+)/g, "func $1")
+        .replace(/\blet\s+(\w+)\s*=/g, "$1 :=")
+        .replace(/\bconst\s+(\w+)\s*=/g, "$1 :=")
+        .replace(/\blet\s+(\w+)\b/g, "$1")
+        .replace(/\bnull\b/g, "nil")
+        .replace(/===/g, "==")
+        .replace(/!==/g, "!=")
+        .replace(/Math\.floor/g, "int")
+        .replace(/console\.log/g, "fmt.Println");
+    }
+    displayCode = translated;
   }
 
   const lines = displayCode.split("\n");

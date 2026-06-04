@@ -20,7 +20,12 @@ export type AlgorithmCategory =
   | "Two Pointer"
   | "Backtracking"
   | "Recursion"
-  | "Bit Manipulation";
+  | "Bit Manipulation"
+  | "Arrays"
+  | "Searching"
+  | "Trees"
+  | "Graphs"
+  | "Dynamic Programming";
 
 export interface AlgorithmItem {
   id: string;
