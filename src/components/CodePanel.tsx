@@ -32,18 +32,40 @@ export default function CodePanel({
 
   // Helper code parser for all supported languages
   const applyColors = (text: string) => {
-    let decorated = text
-      // Comments
-      .replace(/(\/\/.*)/g, '<span class="text-[#A3A199] italic">$1</span>')
-      .replace(/(#.*)/g, '<span class="text-[#A3A199] italic">$1</span>')
-      // Major keywords
-      .replace(/\b(function|let|const|var|return|if|else|for|while|do|break|continue|class|constructor|new|true|false|void|int|bool|boolean|def|func|struct|nullptr|NULL|import|public|private|type|package|return|from)\b/g, '<span class="text-[#059669] font-bold">$1</span>')
-      // Advanced types & standard calls
-      .replace(/\b(std::vector|std::swap|std::max|Math|heapq|Arrays|Stack|Arrays|malloc|strlen|range|len|append|copy|make)\b/g, '<span class="text-[#8B5CF6] font-bold font-mono">$1</span>')
-      // Standard variables/identifiers
-      .replace(/\b(arr|low|high|pivot|swapped|i|j|temp|L|R|k|n|maxSoFar|maxEndingHere|weights|values|capacity|board|a|b|andResult|orResult|xorResult|notA|leftShift|rightShift|head|prev|current|next|stack|map|mapping|results|backtrack|col|row|distances)\b/g, '<span class="text-[#1E40AF] font-medium font-mono">$1</span>')
-      // Base numbers
-      .replace(/\b(\d+)\b/g, '<span class="text-[#D97706]">$1</span>');
+    // 1. First, escape raw HTML characters to prevent breaking the DOM.
+    const escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // 2. Highlighting using a consolidated single regex to prevent double-matching
+    // inside generated HTML tags (e.g. matching 'class' or hex codes).
+    const matchRegex = /(\/\/.*|#.*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(\b(?:function|let|const|var|return|if|else|for|while|do|break|continue|class|constructor|new|true|false|void|int|bool|boolean|def|func|struct|nullptr|NULL|import|public|private|type|package|from)\b)|(\b(?:std::vector|std::swap|std::max|Math|heapq|Arrays|Stack|malloc|strlen|range|len|append|copy|make)\b)|(\b(?:arr|low|high|pivot|swapped|i|j|temp|L|R|k|n|maxSoFar|maxEndingHere|weights|values|capacity|board|a|b|andResult|orResult|xorResult|notA|leftShift|rightShift|head|prev|current|next|stack|map|mapping|results|backtrack|col|row|distances)\b)|(\b\d+\b)/g;
+
+    const decorated = escaped.replace(
+      matchRegex,
+      (match, comment, str, keyword, type, variable, num) => {
+        if (comment !== undefined) {
+          return `<span class="text-[#A3A199] italic">${comment}</span>`;
+        }
+        if (str !== undefined) {
+          return `<span class="text-[#D97706]">${str}</span>`;
+        }
+        if (keyword !== undefined) {
+          return `<span class="text-[#059669] font-bold">${keyword}</span>`;
+        }
+        if (type !== undefined) {
+          return `<span class="text-[#8B5CF6] font-bold font-mono">${type}</span>`;
+        }
+        if (variable !== undefined) {
+          return `<span class="text-[#1E40AF] font-medium font-mono">${variable}</span>`;
+        }
+        if (num !== undefined) {
+          return `<span class="text-[#D97706]">${num}</span>`;
+        }
+        return match;
+      }
+    );
 
     return <span dangerouslySetInnerHTML={{ __html: decorated }} />;
   };
