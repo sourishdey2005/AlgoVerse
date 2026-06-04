@@ -1,0 +1,6 @@
+{
+  "name": "AlgoVerse",
+  "description": "Interactive DSA Learning & Visualization Platform - Visualized step-by-step, executed in real time, and animated.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
